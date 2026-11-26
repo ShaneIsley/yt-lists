@@ -1,0 +1,27 @@
+{
+  "name": "yt-lists",
+  "version": "1.0.0",
+  "description": "Userscript and bookmarklet: export YouTube playlists and watch history, tidy up Watch later.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node test/run.mjs",
+    "test:browser": "node build.mjs && node test/browser.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jsdom": "^31.0.1",
+    "playwright-core": "^1.65.1",
+    "terser": "^5.51.4"
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShaneIsley/yt-lists.git"
+  },
+  "homepage": "https://github.com/ShaneIsley/yt-lists#readme",
+  "bugs": {
+    "url": "https://github.com/ShaneIsley/yt-lists/issues"
+  }
+}
