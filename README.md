@@ -55,10 +55,10 @@ YouTube groups the history by day and gives no time of day, so each item gets a 
 
 ### Tidy Watch later
 
-Press **Read the list**. Reading changes nothing. You then get every video in Watch later with a tick box, and three filters that tick for you:
+Press **Read the list**. Reading changes nothing. You then get every video in Watch later with a tick box, including the deleted and private ones YouTube hides by default (it asks for them the way the page's own "Show unavailable videos" does). Three filters tick for you:
 
 - **Watched at least N%** (default 90).
-- **Unavailable**: rows YouTube marks as not playable.
+- **Unavailable**: rows YouTube marks as not playable, such as deleted and private videos.
 - **Rule**: channel contains, title contains, published at least N years or months ago. Every condition you fill in must hold.
 
 Ticks you set by hand survive filter changes. **Tick all** and **Untick all** are above the list. **Save ticked as JSON/CSV** saves the selection without changing anything.
@@ -114,7 +114,7 @@ Things to know about the values:
 
 ## Limits
 
-- **Hidden videos.** YouTube hides unavailable videos from playlists behind a notice. Those are not read, so a playlist can give fewer videos than YouTube counts, and the Watch later "Unavailable" filter only catches rows YouTube still sends.
+- **Hidden videos in exports.** YouTube hides unavailable videos from playlists behind a notice. The playlists export does not read those, so a playlist can give fewer videos than YouTube counts. Watch later does ask for them; if YouTube will not list them, the panel says so.
 - **No watch times.** The history has dates only.
 - **Ages in other languages.** The Watch later age rule reads English directly and other languages through the browser's own wording. If an age cannot be read, the panel says how many videos that affects and quotes an example.
 - **Your own account only.** It reads what the signed-in page can see.

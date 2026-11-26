@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlists Export
 // @namespace    userscripts/youtube-playlists-export
-// @version      1.13.1
+// @version      1.14.0
 // @description  Export your YouTube playlists (optionally with every video in them) and your watch history as JSON and CSV, and tidy up Watch later. Adds a button on youtube.com/feed/playlists, /feed/history and the Watch later page.
 // @homepageURL  https://github.com/ShaneIsley/yt-lists
 // @supportURL   https://github.com/ShaneIsley/yt-lists/issues
@@ -67,6 +67,9 @@
     historyFilePrefix: 'youtube-history',
     // Watch later
     watchLaterId: 'WL',
+    // What the playlist page's own "Show unavailable videos" adds to its request, so that
+    // deleted and private videos are listed too. Empty: only what the page shows by default.
+    showUnavailableParams: 'wgYCCAA%3D',
     watchLaterFilePrefix: 'youtube-watch-later-ticked',
   };
 
@@ -902,7 +905,8 @@
     let sampledAt = 0;
     let notice = '';
     let requests = 0;
-    for await (const json of browsePages({ browseId: `VL${CONFIG.watchLaterId}` }, run)) {
+    const asked = { hidden: false }; // were the videos YouTube hides asked for, and did it answer?
+    for await (const json of watchLaterPages(run, asked)) {
       const batch = parseItems(json);
       if (requests++ === 0) notice = parseAlert(json);
       else if (!batch.length) break;
@@ -919,7 +923,32 @@
       run.report(patch);
     }
     if (!rows.length) throw new Error(notice || 'Watch later came back empty.');
-    return { source: `${location.origin}/playlist?list=${CONFIG.watchLaterId}`, notice, rows };
+    return { source: `${location.origin}/playlist?list=${CONFIG.watchLaterId}`, notice, rows, askedForHidden: asked.hidden };
+  }
+
+  /**
+   * The pages of Watch later, with the videos YouTube hides by default (deleted, private)
+   * if it will give them: the request is the one behind the page's own "Show unavailable
+   * videos". If that request is refused or brings nothing, the list is read the plain way.
+   */
+  async function* watchLaterPages(run, asked) {
+    const plain = { browseId: `VL${CONFIG.watchLaterId}` };
+    if (CONFIG.showUnavailableParams) {
+      let any = false;
+      try {
+        for await (const json of browsePages({ ...plain, params: CONFIG.showUnavailableParams }, run)) {
+          if (!any && !parseItems(json).length) break;
+          any = true;
+          asked.hidden = true;
+          yield json;
+        }
+      } catch (error) {
+        if (any || isAbort(error)) throw error;
+        log('asking for hidden videos failed; reading the list as the page shows it', error);
+      }
+      if (any) return;
+    }
+    yield* browsePages(plain, run);
   }
 
   /** Text as it is compared: no invisible marks, every kind of space a plain one, lower case. */
@@ -1535,6 +1564,7 @@
       const view = [
         h('p', {}, `${plural(rows.length, 'video')} in Watch later. Tick the ones to remove.`),
         data.notice ? h('p', { class: 'note muted' }, `YouTube says: ${data.notice}`) : null,
+        data.askedForHidden ? null : h('p', { class: 'note muted' }, 'YouTube would not list the videos it hides (deleted or private ones), so they are not here.'),
         controls,
         h('div', { class: 'pick' }, total, h('span', {}, h('button', { type: 'button', onclick: tickAll }, 'Tick all'), h('button', { type: 'button', onclick: untick }, 'Untick all'))),
         list,
